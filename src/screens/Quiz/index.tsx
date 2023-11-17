@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, BackHandler, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -24,12 +26,15 @@ import { ConfirmButton } from '../../components/ConfirmButton';
 import { OutlineButton } from '../../components/OutlineButton';
 import { ProgressBar } from '../../components/ProgressBar';
 import { OverlayFeedback } from '../../components/OverlayFeedback';
+
+
 interface Params {
   id: string;
 }
 type QuizProps = typeof QUIZ[0];
 const CARD_INCLINATION = 10
 const CARD_SKIP_AREA = (-200)
+
 export function Quiz() {
   const [points, setPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,12 +48,14 @@ export function Quiz() {
   const { navigate } = useNavigation();
   const route = useRoute();
   const { id } = route.params as Params;
+
   function handleSkipConfirm() {
     Alert.alert('Pular', 'Deseja realmente pular a questão?', [
       { text: 'Sim', onPress: () => handleNextQuestion() },
       { text: 'Não', onPress: () => { } }
     ]);
   }
+
   async function handleFinished() {
     await historyAdd({
       id: new Date().getTime().toString(),
@@ -62,6 +69,7 @@ export function Quiz() {
       total: String(quiz.questions.length),
     });
   }
+
   function handleNextQuestion() {
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(prevState => prevState + 1)
@@ -69,15 +77,28 @@ export function Quiz() {
       handleFinished();
     }
   }
+
+  async function playSound(isCorrect: boolean) {
+    const file = isCorrect ? require('../../assets/correct.mp3') : require('../../assets/wrong.mp3');
+
+    const { sound } = await Audio.Sound.createAsync(file, { shouldPlay: true })
+
+    await sound.setPositionAsync(0);
+    await sound.playAsync();
+  }
+
   async function handleConfirm() {
     if (alternativeSelected === null) {
       return handleSkipConfirm();
     }
     if (quiz.questions[currentQuestion].correct === alternativeSelected) {
+      await 
+      playSound(true)
       setStatusReply(1);
       setPoints(prevState => prevState + 1);
       handleNextQuestion();
     } else {
+      playSound(false)
       setStatusReply(2);
       shakeAnimation();
     }
@@ -100,7 +121,8 @@ export function Quiz() {
     ]);
     return true;
   }
-  function shakeAnimation() {
+  async function shakeAnimation() {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     shake.value = withSequence(
       withTiming(3, { duration: 400, easing: Easing.bounce }), 
       withTiming(0, undefined, (finished => {
@@ -174,9 +196,18 @@ export function Quiz() {
     setQuiz(quizSelected);
     setIsLoading(false);
   }, []);
+
+
   if (isLoading) {
     return <Loading />
   }
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleStop)
+
+    return () => backHandler.remove();
+  },[])
+  
   return (
     <View style={styles.container}>
       <OverlayFeedback status={statusReply} />
