@@ -1,8 +1,14 @@
+import { useEffect } from 'react';
 import { Text, TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import {
+  BlurMask,
   Canvas,
+  Circle,
+  Easing,
   Path,
-  Skia
+  Skia,
+  runTiming,
+  useValue
 } from '@shopify/react-native-skia';
 
 import { styles } from './styles';
@@ -18,9 +24,23 @@ const CHECK_STROKE = 2;
 
 export function Option({ checked, title, ...rest }: Props) {
   const RADIUS = (CHECK_SIZE - CHECK_STROKE) / 2;
+  const CENTER_CIRCLE = RADIUS / 2;
 
   const path = Skia.Path.Make();
   path.addCircle(CHECK_SIZE, CHECK_SIZE, RADIUS)
+
+  const percentage = useValue(0)
+  const circle = useValue(0);
+
+  useEffect(() => {
+    if(checked) {
+      runTiming(percentage, 1, { duration: 700 })
+      runTiming(circle, CENTER_CIRCLE, { easing: Easing.bounce })
+    } else {
+      runTiming(percentage, 0, { duration: 400 })
+      runTiming(circle, 0, { duration: 300 })
+    }
+  },[checked])
 
   return (
     <TouchableOpacity
@@ -50,8 +70,18 @@ export function Option({ checked, title, ...rest }: Props) {
           style="stroke"
           strokeWidth={CHECK_STROKE}
           start={0}
-          end={0.5}
-        /> 
+          end={percentage}
+        >
+          <BlurMask blur={1} style="solid" />
+        </Path> 
+        <Circle 
+          cx={CHECK_SIZE}
+          cy={CHECK_SIZE}
+          r={circle}
+          color={THEME.COLORS.BRAND_LIGHT}
+        >
+          <BlurMask blur={4} style="solid" />
+        </Circle>
       </Canvas>
     </TouchableOpacity>
   );
