@@ -3,7 +3,7 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/LucasHARosa/Quiz_Programing)
 ![GitHub last commit](https://img.shields.io/github/last-commit/LucasHARosa/Quiz_Programing)
 
-# App - Gym Train
+# App - Quiz Programing
 
 A aprendizagem de programação pode ser desafiadora, mas também pode ser empolgante e envolvente. Neste contexto, surge uma aplicação inovadora desenvolvida em React Native: um Quiz de Programação que não apenas testa conhecimentos, mas também proporciona uma experiência única de aprendizado, focada em animações, gesture handling, e o poderoso Skia. Vamos explorar os elementos-chave desta aplicação que promove o estudo enquanto entretém.
 
